@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lovebound</title>
+    <style>
+        :root {
+            --navy: #0B132B;
+            --navy-light: #1C2541;
+            --pink: #FF9EBB;
+            --pink-dark: #E07A9EA;
+            --text-light: #F8F9FA;
+        }
+        
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Georgia', serif;
+            background-color: var(--navy);
+            color: var(--text-light);
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Efek Hati Melayang */
+        .floating-hearts {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            overflow: hidden;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .floating-hearts span {
+            position: absolute;
+            display: block;
+            width: 20px;
+            height: 20px;
+            background: transparent;
+            animation: flyHeart 6s linear infinite;
+            bottom: -20px;
+            font-size: 16px;
+            color: var(--pink);
+            opacity: 0.7;
+        }
+
+        @keyframes flyHeart {
+            0% { transform: translateY(0) scale(0.6); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: translateY(-100vh) scale(1.2); opacity: 0; }
+        }
+
+        .screen {
+            display: none;
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            padding: 15px;
+            box-sizing: border-box;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            animation: fadeIn 1s ease-in-out;
+            position: relative;
+            z-index: 2;
+        }
+
+        .active { display: flex; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        h1, h2, h3 { font-style: italic; font-weight: normal; color: var(--pink); margin: 5px 0; }
+        
+        .btn {
+            background-color: var(--pink);
+            color: var(--navy);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+            transition: 0.3s;
+        }
+
+        .btn:hover { background-color: var(--pink-dark); color: white; }
+        .btn-outline { background-color: transparent; color: var(--pink); border: 2px solid var(--pink); }
+
+        .modal {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--navy-light);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid var(--pink);
+            width: 85%;
+            z-index: 999;
+            box-shadow: 0 4px 25px rgba(255, 158, 187, 0.4);
+        }
+
+        .modal-active { display: block; animation: fadeIn 0.3s; }
+
+        .heart-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 50px);
+            grid-template-rows: repeat(4, 50px);
+            gap: 5px;
+            justify-content: center;
+            margin: 15px 0;
+            padding: 10px;
+            background: radial-gradient(circle, rgba(255,158,187,0.1) 0%, rgba(11,19,43,0) 70%);
+        }
+
+        .heart-grid img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid var(--pink);
+            background-color: var(--navy-light);
+        }
+
+        .img-1 { grid-column: 2; grid-row: 1; }
+        .img-2 { grid-column: 4; grid-row: 1; }
+        .img-3 { grid-column: 1; grid-row: 2; }
+        .img-4 { grid-column: 2; grid-row: 2; }
+        .img-5 { grid-column: 3; grid-row: 2; }
+        .img-6 { grid-column: 4; grid-row: 2; }
+        .img-7 { grid-column: 5; grid-row: 2; }
+        .img-8 { grid-column: 2; grid-row: 3; }
+        .img-9 { grid-column: 3; grid-row: 3; }
+        .img-10 { grid-column: 4; grid-row: 3; }
+        .img-11 { grid-column: 3; grid-row: 4; }
+
+        .play-box {
+            background: var(--navy-light);
+            padding: 12px 30px;
+            border-radius: 20px;
+            border: 1px solid var(--pink);
+            margin-bottom: 10px;
+            width: 60%;
+        }
+
+        .progress-bar {
+            width: 80%;
+            height: 10px;
+            background: var(--navy-light);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+            border: 1px solid var(--pink);
+        }
+        .progress-fill { height: 100%; width: 0%; background: var(--pink); transition: width 0.1s linear; }
+
+        .game-card {
+            background: var(--navy-light);
+            border: 2px solid var(--pink);
+            border-radius: 20px;
+            padding: 15px;
+            width: 90%;
+            max-width: 330px;
+            box-shadow: 0 4px 20px rgba(255, 158, 187, 0.2);
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 75px);
+            gap: 8px;
+            margin: 15px 0;
+            justify-content: center;
+        }
+        .game-cell {
+            width: 75px; height: 75px;
+            background: rgba(11, 19, 43, 0.8);
+            border: 1px solid var(--pink);
+            border-radius: 15px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: bold; cursor: pointer; user-select: none;
+            color: var(--pink);
+            text-align: center;
+            transition: 0.2s;
+        }
+        .game-cell:hover { background: rgba(255, 158, 187, 0.1); }
+
+        .tap-counter-box {
+            background: transparent;
+            border: 1px solid var(--pink);
+            border-radius: 20px;
+            padding: 6px 15px;
+            font-size: 12px;
+            color: var(--text-light);
+            margin: 10px auto;
+            width: fit-content;
+        }
+
+        /* Carousel Foto Otomatis Bergerak */
+        .carousel-container {
+            width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            position: relative;
+            margin-bottom: 5px;
+            padding: 5px 0;
+        }
+
+        .carousel-track {
+            display: inline-flex;
+            gap: 10px;
+            animation: scrollPhotos 15s linear infinite;
+        }
+
+        .carousel-track img {
+            width: 90px; height: 110px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid var(--pink);
+            flex-shrink: 0;
+            background: var(--navy-light);
+        }
+
+        @keyframes scrollPhotos {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Kotak Pembatas Teks Surat */
+        .letter-card-box {
+            background: var(--navy-light);
+            border: 1px solid var(--pink);
+            border-radius: 15px;
+            padding: 12px;
+            width: 100%;
+            max-width: 350px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 15px rgba(255, 158, 187, 0.15);
+        }
+
+        .letter-container {
+            width: 100%; height: 28vh;
+            overflow-y: auto; text-align: left;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px; line-height: 1.4;
+            padding-right: 5px;
+            color: var(--text-light);
+        }
+        
+        .award-box { border: 2px solid var(--pink); padding: 15px; border-radius: 10px; text-align: center; background: var(--navy-light); }
+    </style>
+</head>
+<body>
+
+    <div class="floating-hearts">
+        <span style="left: 10%; animation-delay: 0s;">❤️</span>
+        <span style="left: 30%; animation-delay: 2s;">🤍</span>
+        <span style="left: 50%; animation-delay: 4s;">❤️</span>
+        <span style="left: 70%; animation-delay: 1s;">🤍</span>
+        <span style="left: 90%; animation-delay: 3s;">❤️</span>
+    </div>
+
+    <audio id="bgMusic" src="blessed.mp3" loop></audio>
+
+    <!-- SCREEN 1 -->
+    <div class="screen active" id="screen1">
+        <h1>Dear Amara</h1>
+        <p style="font-size: 14px; margin-bottom: 5px;">Could this be our next chapter?</p>
+        
+        <div class="heart-grid">
+            <img src="photo_1_2026-10-05_20-26-32.jpg" class="img-1" alt="1">
+            <img src="photo_2_2026-10-05_20-26-32.jpg" class="img-2" alt="2">
+            <img src="photo_3_2026-10-05_20-26-32.jpg" class="img-3" alt="3">
+            <img src="photo_4_2026-10-05_20-26-32.jpg" class="img-4" alt="4">
+            <img src="photo_5_2026-10-05_20-26-32.jpg" class="img-5" alt="5">
+            <img src="photo_6_2026-10-05_20-26-32.jpg" class="img-6" alt="6">
+            <img src="photo_2026-10-05_21-34-37.jpg" class="img-7" alt="7">
+            <img src="photo_2026-10-05_21-34-04.jpg" class="img-8" alt="8">
+            <img src="photo_2026-10-05_21-34-04 (2).jpg" class="img-9" alt="9">
+            <img src="photo_2026-10-05_21-34-05.jpg" class="img-10" alt="10">
+            <img src="photo_2026-10-05_21-34-05 (2).jpg" class="img-11" alt="11">
+        </div>
+
+        <div class="play-box">
+            <h3 style="margin: 0; font-size: 14px;">just you</h3>
+            <p style="margin: 3px 0 0 0; font-size: 11px;">tap to play</p>
+        </div>
+
+        <div>
+            <button class="btn" onclick="playMusicAndNext(2)">Yes</button>
+            <button class="btn btn-outline" onclick="showModal('noModal')">No</button>
+        </div>
+
+        <div class="modal" id="noModal">
+            <h3>Oops, wrong choice, dear 🤍</h3>
+            <p style="font-size: 13px;">You’re supposed to choose Yes. Let's not break my heart today.</p>
+            <button class="btn" onclick="closeAllModals()">Okay… I’ll behave</button>
+            <button class="btn btn-outline" onclick="closeAllModals(); playMusicAndNext(2)">Fine… Yes</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 2 -->
+    <div class="screen" id="screen2">
+        <h2>Then let’s turn the page 🤍</h2>
+        <p style="font-size: 13px;">Just wait a sec…</p>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <p style="font-size: 11px; margin-top: 10px;">Preparing something for you…</p>
+    </div>
+
+    <!-- SCREEN 3 -->
+    <div class="screen" id="screen3">
+        <p style="font-size: 14px; color: var(--pink); margin-bottom: 2px;">Loving you feels like a quiet...</p>
+        
+        <div class="game-card">
+            <h2 style="font-size: 18px; margin: 0;">okay... tiny game time 🤍</h2>
+            <p style="font-size: 11px; margin: 2px 0 8px 0;">tap the hearts in order.</p>
+            
+            <div class="game-grid">
+                <div class="game-cell" style="font-size: 20px;">✕</div>
+                <div class="game-cell" style="font-size: 11px; line-height: 1.2;">you<br>won</div>
+                <div class="game-cell" style="font-size: 20px;">✕</div>
+
+                <div class="game-cell" id="tapCell1" onclick="turnToHeart('tapCell1')">tap</div>
+                <div class="game-cell clickable" id="middleHeart" onclick="tapMiddleHeart()" style="font-size: 18px;">❤️</div>
+                <div class="game-cell" id="tapCell2" onclick="turnToHeart('tapCell2')">tap</div>
+
+                <div class="game-cell" style="font-size: 20px;"></div>
+                <div class="game-cell" style="font-size: 11px; line-height: 1.2;">my<br>heart</div>
+                <div class="game-cell" style="font-size: 20px;">✕</div>
+            </div>
+
+            <div class="tap-counter-box" id="tapText">middle heart taps: 0/10</div>
+        </div>
+
+        <p style="font-size: 12px; margin: 12px 0 3px 0;">tap the middle heart 10 times to continue 🤍</p>
+        <p style="font-size: 11px; color: var(--pink); max-width: 320px; margin: 0;">You're my calm in a noisy world, the place my heart rests without asking permission.</p>
+    </div>
+
+    <!-- SCREEN 4 -->
+    <div class="screen" id="screen4">
+        <h2 style="font-size: 15px; margin-top: 0;">enjoy every moment.</h2>
+        
+        <div class="carousel-container">
+            <div class="carousel-track">
+                <img src="photo_1_2026-10-05_20-26-32.jpg" alt="A">
+                <img src="photo_3_2026-10-05_20-26-32.jpg" alt="B">
+                <img src="photo_5_2026-10-05_20-26-32.jpg" alt="C">
+                <img src="photo_2026-10-05_21-34-37.jpg" alt="D">
+                <img src="photo_1_2026-10-05_20-26-32.jpg" alt="A">
+                <img src="photo_3_2026-10-05_20-26-32.jpg" alt="B">
+                <img src="photo_5_2026-10-05_20-26-32.jpg" alt="C">
+                <img src="photo_2026-10-05_21-34-37.jpg" alt="D">
+            </div>
+        </div>
+
+        <div class="letter-card-box">
+            <h3 style="text-align: left; width: 100%; margin: 0 0 5px 0; font-size: 13px;">A LITTLE LETTER</h3>
+            <div class="letter-container" id="letterText"></div>
+        </div>
+        
+        <button class="btn" id="showAwardBtn" style="display:none; margin-top: 10px;" onclick="showModal('awardModal')">Open Your Award</button>
+
+        <!-- MODAL 1: AWARD -->
+        <div class="modal" id="awardModal">
+            <div class="award-box">
+                <p style="font-size: 12px; margin: 2px;">You make ordinary days feel…</p>
+                <p style="font-size: 12px; margin: 2px;">In every timeline, in every, i would choose you</p>
+                <hr style="border-color: var(--pink); margin: 6px 0;">
+                <h3 style="margin:0; font-size: 14px;">Favorite person</h3>
+                <h2 style="font-size: 18px; margin: 2px 0;">AWARD</h2>
+                <p style="font-size: 9px; letter-spacing: 2px; margin: 2px;">PROUDLY PRESENTED TO</p>
+                <h1 style="margin: 3px 0; font-size: 20px;">Amara</h1>
+                <p style="font-size: 11px; font-style: italic; margin: 2px;">I genuinely love your…</p>
+                
+                <button class="btn" style="width: 100%; margin: 8px 0 0 0;" onclick="openQuestionModal()">Continue 🤍</button>
+            </div>
+        </div>
+
+        <!-- MODAL 2: WOULD YOU LIKE TO MAKE THIS SOMETHING MORE -->
+        <div class="modal" id="questionModal">
+            <div class="award-box">
+                <h3 style="font-size: 16px; margin-bottom: 12px;">Would you like to make this something more?</h3>
+                <div style="display: flex; justify-content: center; gap: 10px;" id="yesButtonsContainer">
+                    <button class="btn" style="flex: 1; margin: 0;" onclick="handleYesClick()">Yes</button>
+                    <button class="btn" style="flex: 1; margin: 0;" onclick="handleYesClick()">Yes</button>
+                </div>
+                <p id="merczMessage" style="font-size: 13px; color: var(--pink); font-style: italic; margin-top: 10px; display: none;"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const letterContent = "Thank you for coming into my life sayang. Honestly i don’t know where I would be without all the little moments we’ve shared, because somehow, you’ve become such a beautiful part of my everyday life. Thank you for coming into my life. I never knew how much someone could change the way I see my ordinary days until you became a part of mine.\n\nThank you for being there, for accompanying me through my everyday life, through the little moments, random conversations, silly things, and even the quiet days. Somehow, having you around makes everything feel a little more meaningful.\n\nAnd after knowing you for quite some time, I think I’ve come to realize that I don’t want to keep seeing us as just friends, or as something in between that we never really put a name to.\nI’ve grown to care about you in a way that feels deeper than friendship. I don’t just want you to be someone who happens to be there in my everyday life. I want us to have something real, something we can both call ours.\n\nI want you to be the person I can share my days with, not only as my friend, but as someone special to me, as my girlfriend.\n\nAfter everything we’ve shared and all the time we’ve spent getting to know each other, I think it’s time for me to stop wondering “what if?” and finally tell you how I truly feel.";
+
+        let taps = 0;
+        let spotifyLink = "https://open.spotify.com/playlist/2JKkvrxUkKet44247GoPVA?si=uquMQdEcRiK9Vm6ro_6oZQ";
+
+        function showModal(id) {
+            closeAllModals();
+            document.getElementById(id).classList.add('modal-active');
+        }
+
+        function closeAllModals() {
+            document.querySelectorAll('.modal').forEach(m => m.classList.remove('modal-active'));
+        }
+
+        function openQuestionModal() {
+            closeAllModals();
+            showModal('questionModal');
+        }
+
+        function playMusicAndNext(num) {
+            const music = document.getElementById('bgMusic');
+            music.play().catch(err => console.log("Audio play blocked by browser:", err));
+            nextScreen(num);
+        }
+
+        function nextScreen(num) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen' + num).classList.add('active');
+
+            if(num === 2) {
+                startLoading();
+            } else if (num === 4) {
+                typeLetter();
+            }
+        }
+
+        function startLoading() {
+            let width = 0;
+            let bar = document.getElementById('progressFill');
+            let interval = setInterval(() => {
+                if (width >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => nextScreen(3), 500);
+                } else {
+                    width++;
+                    bar.style.width = width + '%';
+                }
+            }, 30);
+        }
+
+        function turnToHeart(cellId) {
+            const cell = document.getElementById(cellId);
+            if(cell.innerText === 'tap') {
+                cell.innerText = '❤️';
+                cell.style.fontSize = '18px';
+            }
+        }
+
+        function tapMiddleHeart() {
+            taps++;
+            const heart = document.getElementById('middleHeart');
+            heart.style.transform = "scale(1.2)";
+            setTimeout(() => { heart.style.transform = "scale(1)"; }, 100);
+            
+            if (taps >= 10) {
+                nextScreen(4);
+            } else {
+                document.getElementById('tapText').innerText = "middle heart taps: " + taps + "/10";
+            }
+        }
+
+        function handleYesClick() {
+            const container = document.getElementById('yesButtonsContainer');
+            const msg = document.getElementById('merczMessage');
+            
+            container.style.display = 'none';
+            msg.style.display = 'block';
+            msg.innerText = "text @Merczedes to answer this question";
+
+            setTimeout(() => {
+                window.location.href = spotifyLink;
+            }, 3000);
+        }
+
+        function typeLetter() {
+            let i = 0;
+            let speed = 40; 
+            let container = document.getElementById('letterText');
+            container.innerHTML = '';
+            
+            function typeWriter() {
+                if (i < letterContent.length) {
+                    if(letterContent.charAt(i) === '\n') {
+                        container.innerHTML += '<br>';
+                    } else {
+                        container.innerHTML += letterContent.charAt(i);
+                    }
+                    i++;
+                    container.scrollTop = container.scrollHeight;
+                    setTimeout(typeWriter, speed);
+                } else {
+                    document.getElementById('showAwardBtn').style.display = 'block';
+                }
+            }
+            typeWriter();
+        }
+    </script>
+</body>
+</html>
